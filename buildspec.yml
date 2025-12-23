@@ -20,6 +20,9 @@ phases:
       - mkdir -p $HOME/.kube
       - aws eks update-kubeconfig --region us-east-2 --name a081001-cluster
 
+      - echo "Ensure ECR repo exists"
+      - aws ecr describe-repositories --region $AWS_DEFAULT_REGION --repository-names $IMAGE_REPO_NAME || aws ecr create-repository --region $AWS_DEFAULT_REGION --repository-name $IMAGE_REPO_NAME
+
       - echo "Login to ECR"
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com
 
@@ -36,6 +39,8 @@ phases:
 
   post_build:
     commands:
+      - if [ "$CODEBUILD_BUILD_SUCCEEDING" -ne 1 ]; then echo "Build failed, skip deploy"; exit 1; fi
+
       - export AWS_ECR_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:$IMAGE_TAG
       - export DATE=$(date)
       - echo Build completed on $DATE
