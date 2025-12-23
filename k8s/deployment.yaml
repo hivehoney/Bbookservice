@@ -13,7 +13,7 @@ spec:
         app: backend
     spec:
       containers:
-        - name: cloud-l3-project
+        - name: backend
           image: AWS_ECR_URI
           ports:
             - containerPort: 8080
